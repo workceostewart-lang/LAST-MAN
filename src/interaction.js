@@ -96,7 +96,11 @@ export class InteractionManager {
         this.selectedCard = card;
         
         // Pop up slightly higher when selected
-        gsap.to(card.mesh.position, { y: -1.4, z: 3.7, duration: 0.2 });
+        gsap.to(card.mesh.position, {
+          y: (card.handBaseY ?? -2.2) + (card.isMobileLayout ? 0.5 : 0.8),
+          z: (card.handBaseZ ?? 3) + (card.isMobileLayout ? 0.35 : 0.7),
+          duration: 0.2,
+        });
       }
     } else {
       // Clicked outside, deselect

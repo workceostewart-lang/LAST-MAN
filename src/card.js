@@ -5,6 +5,32 @@ const textureLoader = new THREE.TextureLoader();
 const backTexture = textureLoader.load('/assets/themes/premium/back.jpg');
 const red7Texture = textureLoader.load('/assets/themes/premium/red_7.jpg');
 
+function getHandLayout(total) {
+  const isMobile = window.matchMedia(
+    '(max-width: 700px), (max-height: 500px) and (max-width: 950px)',
+  ).matches;
+  if (!isMobile) {
+    return {
+      isMobile,
+      spacing: 1.6,
+      scale: 1,
+      targetY: -2.2,
+      targetZ: 3,
+    };
+  }
+
+  const cardCount = Math.max(total, 1);
+  const spacing = cardCount === 1 ? 0 : Math.min(0.9, 5.4 / (cardCount - 1));
+  const occupiedWidth = 1.5 + spacing * (cardCount - 1);
+  return {
+    isMobile,
+    spacing,
+    scale: Math.min(0.62, 6.1 / occupiedWidth),
+    targetY: -3,
+    targetZ: 3,
+  };
+}
+
 export class Card {
   constructor(id, color, value, scene, physicsWorld, isCPU = false) {
     this.id = id;
@@ -120,18 +146,19 @@ export class Card {
   
   // Animate to player hand
   animateToHand(index, total, isCPU) {
-    const spacing = 1.6;
+    const layout = getHandLayout(total);
+    const { spacing } = layout;
     const startX = -((total - 1) * spacing) / 2;
     let targetX = startX + (index * spacing);
     
-    let targetY = -2.2;
-    let targetZ = 3;
+    let targetY = layout.targetY;
+    let targetZ = layout.targetZ;
     let rotX = -0.2;
     let rotY = 0;
     let rotZ = 0;
     
     // Fan effect
-    const angle = (index - (total-1)/2) * 0.1;
+    const angle = layout.isMobile ? 0 : (index - (total-1)/2) * 0.1;
     targetY -= Math.abs(angle) * 1.5;
     targetX += Math.sin(angle) * 0.5;
     rotZ = -angle;
@@ -142,13 +169,17 @@ export class Card {
       targetZ = -4;
       rotX = Math.PI; // facedown
     }
+
+    this.handBaseY = targetY;
+    this.handBaseZ = targetZ;
+    this.isMobileLayout = layout.isMobile;
     
     gsap.to(this.mesh.position, {
       x: targetX,
       y: targetY,
       z: targetZ,
       duration: 0.6,
-      delay: index * 0.1,
+      delay: index * (layout.isMobile ? 0.04 : 0.1),
       ease: 'back.out(1.5)'
     });
     
@@ -157,7 +188,15 @@ export class Card {
       y: rotY,
       z: rotZ,
       duration: 0.6,
-      delay: index * 0.1,
+      delay: index * (layout.isMobile ? 0.04 : 0.1),
+      ease: 'power2.out'
+    });
+
+    gsap.to(this.mesh.scale, {
+      x: layout.scale,
+      y: layout.scale,
+      z: layout.scale,
+      duration: 0.35,
       ease: 'power2.out'
     });
   }
@@ -165,30 +204,35 @@ export class Card {
   // Highlight when hovering
   hover(isHovered) {
     if (this.isCPU) return;
+    const baseY = this.handBaseY ?? -2.2 - Math.abs(this.mesh.rotation.z) * 1.5;
+    const baseZ = this.handBaseZ ?? 3;
     gsap.to(this.mesh.position, {
-      y: isHovered ? -1.55 : -2.2 - Math.abs(this.mesh.rotation.z) * 1.5,
-      z: isHovered ? 3.5 : 3,
+      y: isHovered ? baseY + (this.isMobileLayout ? 0.42 : 0.65) : baseY,
+      z: isHovered ? baseZ + (this.isMobileLayout ? 0.28 : 0.5) : baseZ,
       duration: 0.2
     });
   }
   
   // Play card to discard pile
-  playToDiscard(discardTopPos) {
-    // Add physics body here to let it drop realistically
-    // We'll mock physics dropping with GSAP for the smooth arc, then switch to physics body
-    
+  playToDiscard(discardTopPos, pileIndex = 0) {
+    // Generate a pseudo-random but clean offset based on pile height for the "pile feel"
+    // Using pileIndex ensures it lands perfectly consistently for its position in the pile
+    const rotZ = (pileIndex % 3 - 1) * 0.05;
+    const offsetX = (pileIndex % 4 - 1.5) * 0.02;
+    const offsetZ = (pileIndex % 5 - 2) * 0.02;
+
     gsap.to(this.mesh.position, {
-      x: discardTopPos.x + (Math.random() - 0.5) * 0.5,
+      x: discardTopPos.x + offsetX,
       y: discardTopPos.y,
-      z: discardTopPos.z + (Math.random() - 0.5) * 0.5,
+      z: discardTopPos.z + offsetZ,
       duration: 0.5,
       ease: 'power2.inOut'
     });
     
     gsap.to(this.mesh.rotation, {
-      x: 0,
+      x: -Math.PI / 2, // flat on the table
       y: 0,
-      z: (Math.random() - 0.5) * Math.PI,
+      z: rotZ,
       duration: 0.5,
       ease: 'power2.inOut'
     });

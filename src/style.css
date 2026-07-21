@@ -235,3 +235,183 @@ select {
 .hidden {
   display: none !important;
 }
+
+@media (max-width: 700px), (max-height: 500px) and (max-width: 950px) {
+  html,
+  body {
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  body {
+    height: 100dvh;
+  }
+
+  #canvas-container,
+  #ui-layer {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .hud-element {
+    border-radius: 10px;
+    padding: 7px 9px;
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .top-left {
+    top: 8px;
+    left: 8px;
+  }
+
+  .top-center {
+    top: 8px;
+    gap: 5px;
+  }
+
+  .top-right {
+    top: 8px;
+    right: 8px;
+  }
+
+  #player-status {
+    top: 50px !important;
+    right: 8px !important;
+    left: 8px;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 4px !important;
+    padding: 6px 7px;
+    font-size: 0.58rem !important;
+  }
+
+  #player-status > div {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .message-center {
+    top: 84px;
+    max-width: calc(100vw - 16px);
+    white-space: normal;
+  }
+
+  .bottom-center {
+    bottom: 10px;
+  }
+
+  #last-card-btn {
+    right: 8px;
+    bottom: 10px;
+    font-size: 0.72rem;
+  }
+
+  .modal-content {
+    width: min(92vw, 360px);
+    min-width: 0;
+    max-height: calc(100dvh - 24px);
+    overflow: hidden;
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .modal-content h2 {
+    margin-bottom: 12px;
+    font-size: 1.1rem;
+  }
+
+  #settings-modal .modal-content {
+    max-height: calc(100dvh - 24px);
+    overflow: hidden;
+  }
+
+  .setting-row {
+    margin-bottom: 8px;
+    gap: 12px;
+    font-size: 0.82rem;
+  }
+
+  select {
+    max-width: 56%;
+    padding: 5px 7px;
+    font-size: 0.78rem;
+  }
+
+  .primary-btn {
+    padding: 9px 12px;
+    font-size: 0.9rem;
+  }
+
+  .mt-2 {
+    margin-top: 10px;
+  }
+
+  .color-options {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .color-btn {
+    width: min(19vw, 70px);
+    height: min(19vw, 70px);
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 360px) and (min-height: 361px) {
+  .hud-element {
+    padding: 6px 7px;
+    font-size: 0.6rem;
+  }
+
+  .top-center {
+    gap: 3px;
+  }
+
+  #player-status {
+    font-size: 0.54rem !important;
+  }
+}
+
+@media (max-height: 500px) and (max-width: 950px) and (min-height: 361px) {
+  .modal-content {
+    padding: 10px 16px;
+  }
+
+  .modal-content h2 {
+    margin-bottom: 6px;
+  }
+
+  .setting-row {
+    margin-bottom: 4px;
+  }
+
+  .primary-btn {
+    padding-block: 6px;
+  }
+
+  .mt-2 {
+    margin-top: 6px;
+  }
+}
+
+@media (max-width: 280px), (max-height: 360px) {
+  #canvas-container,
+  #ui-layer {
+    display: none;
+  }
+}

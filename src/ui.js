@@ -5,6 +5,7 @@ export class UIManager {
     this.messageTimer = null;
     this.drawCountEl = document.getElementById('draw-count');
     this.drawInfo = document.getElementById('draw-info');
+    this.playerStatusEl = document.getElementById('player-status');
     this.uiLayer = document.getElementById('ui-layer');
     this.turnIndicator = document.getElementById('turn-indicator');
     this.turnText = this.turnIndicator.querySelector('.turn-text');
@@ -97,6 +98,24 @@ export class UIManager {
     this.uiLayer.dataset.canPass = String(state.canPass);
     this.uiLayer.dataset.round = String(state.roundNumber);
     this.drawCountEl.textContent = state.drawPileCount;
+
+    if (this.playerStatusEl) {
+      this.playerStatusEl.innerHTML = '';
+      state.players.forEach(player => {
+        const isCurrent = state.currentPlayerId === player.id;
+        const div = document.createElement('div');
+        div.textContent = `${player.name}: ${player.handCount} card${player.handCount !== 1 ? 's' : ''}`;
+        if (isCurrent) {
+          div.style.color = 'var(--color-blue)';
+          div.style.fontWeight = '900';
+        }
+        if (player.handCount === 1) {
+          div.style.color = 'var(--color-red)';
+          div.textContent += ' 🔥';
+        }
+        this.playerStatusEl.appendChild(div);
+      });
+    }
 
     const currentPlayer = state.players.find((player) => player.id === state.currentPlayerId);
     if (state.phase === 'awaitingColor') {

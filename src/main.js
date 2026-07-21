@@ -9,8 +9,32 @@ import { UIManager } from './ui.js';
 const container = document.getElementById('canvas-container');
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-camera.position.set(0, 5, 10);
-camera.lookAt(0, 0, 0);
+
+function isMobileViewport() {
+  return window.innerWidth <= 700 || (window.innerHeight <= 500 && window.innerWidth <= 950);
+}
+
+function getTableLayout() {
+  return isMobileViewport()
+    ? { drawX: -1.35, discardX: 0.85, pileScale: 0.68 }
+    : { drawX: -3, discardX: 0, pileScale: 1 };
+}
+
+function updateCameraLayout() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  if (isMobileViewport()) {
+    camera.fov = 62;
+    camera.position.set(0, 4, 13);
+    camera.lookAt(0, -0.8, 0);
+  } else {
+    camera.fov = 45;
+    camera.position.set(0, 5, 10);
+    camera.lookAt(0, 0, 0);
+  }
+  camera.updateProjectionMatrix();
+}
+
+updateCameraLayout();
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -128,19 +152,21 @@ function clearTable() {
 function buildRound(state) {
   clearTable();
   renderedRound = state.roundNumber;
+  const layout = getTableLayout();
 
   if (state.discardTop) {
     const top = createCardView(state.discardTop).setZone('discard');
-    top.setPosition(0, 0.03, 0);
-    top.setRotation(-Math.PI / 2, 0, (Math.random() - 0.5) * 0.2);
-    physics.addCard(top.mesh);
+    top.setPosition(layout.discardX, 0.03, 0);
+    top.setRotation(-Math.PI / 2, 0, 0);
+    top.mesh.scale.setScalar(layout.pileScale);
     discardViews.push(top);
   }
 
   for (let index = 0; index < 5; index += 1) {
     const view = new Card(`draw-visual-${index}`, 'back', '', scene, physics).setZone('draw');
-    view.setPosition(-3, index * 0.025, 0);
+    view.setPosition(layout.drawX, index * 0.025, 0);
     view.setRotation(-Math.PI / 2, 0, 0);
+    view.mesh.scale.setScalar(layout.pileScale);
     drawViews.push(view);
   }
 
@@ -187,10 +213,11 @@ function movePlayedCard(event) {
 
   handViews = handViews.filter((candidate) => candidate !== view);
   view.setZone('discard');
-  const topY = discardViews.length * 0.03;
-  view.playToDiscard(new THREE.Vector3(0, topY, 0));
+  const layout = getTableLayout();
+  view.mesh.scale.setScalar(layout.pileScale);
+  const topY = discardViews.length * 0.02; // Card thickness is 0.02
+  view.playToDiscard(new THREE.Vector3(layout.discardX, topY, 0), discardViews.length);
   discardViews.push(view);
-  window.setTimeout(() => physics.addCard(view.mesh), 500);
 }
 
 function syncDiscard(state, event) {
@@ -282,8 +309,23 @@ function animate() {
 }
 animate();
 
+function reflowTable() {
+  updateCameraLayout();
+  const layout = getTableLayout();
+  drawViews.forEach((view, index) => {
+    view.setPosition(layout.drawX, index * 0.025, 0);
+    view.mesh.scale.setScalar(layout.pileScale);
+  });
+  discardViews.forEach((view, index) => {
+    const offsetX = (index % 4 - 1.5) * 0.02;
+    const offsetZ = (index % 5 - 2) * 0.02;
+    view.setPosition(layout.discardX + offsetX, index * 0.02, offsetZ);
+    view.mesh.scale.setScalar(layout.pileScale);
+  });
+  handViews.forEach((view, index) => view.animateToHand(index, handViews.length, false));
+}
+
 window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+  reflowTable();
 });
