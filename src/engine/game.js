@@ -77,6 +77,8 @@ export class LastManGame {
     this.roundWinnerId = null;
     this.matchWinnerId = null;
     this.roundScore = 0;
+    this.roundStartingPlayerIndex = 0;
+    this.cpuCatchAttemptedTargetId = null;
 
     this.createPlayers();
     if (options.autoStart !== false) this.startMatch();
@@ -118,7 +120,7 @@ export class LastManGame {
     this.createPlayers();
     this.roundNumber = 0;
     this.matchWinnerId = null;
-    this.startRound(0, 'matchStarted');
+    this.startRound(this.random.integer(this.players.length), 'matchStarted');
   }
 
   startRound(startingPlayerIndex = 0, eventType = 'roundStarted') {
@@ -130,7 +132,9 @@ export class LastManGame {
     this.pendingDraw = 0;
     this.turnDrawnCardId = null;
     this.pendingColorChoice = null;
-    this.currentPlayerIndex = startingPlayerIndex % this.players.length;
+    this.roundStartingPlayerIndex = startingPlayerIndex % this.players.length;
+    this.currentPlayerIndex = this.roundStartingPlayerIndex;
+    this.cpuCatchAttemptedTargetId = null;
     this.drawPile = shuffle(createStandardDeck(this.roundNumber), this.random);
     this.discardPile = [];
 
@@ -162,8 +166,8 @@ export class LastManGame {
 
   continueRound() {
     if (this.phase !== 'roundOver') return { ok: false, reason: 'round-not-over' };
-    const winnerIndex = this.players.findIndex((player) => player.id === this.roundWinnerId);
-    this.startRound(winnerIndex >= 0 ? winnerIndex : 0);
+    const nextStartingPlayerIndex = (this.roundStartingPlayerIndex + 1) % this.players.length;
+    this.startRound(nextStartingPlayerIndex);
     return { ok: true };
   }
 
@@ -270,6 +274,12 @@ export class LastManGame {
       player.hasCalledLastCard = cpuCallsLastCard(player, this.random);
     }
 
+    if (player.hand.length === 1 && !player.hasCalledLastCard) {
+      this.cpuCatchAttemptedTargetId = null;
+    } else if (this.cpuCatchAttemptedTargetId === player.id) {
+      this.cpuCatchAttemptedTargetId = null;
+    }
+
     if (player.hand.length === 0) {
       this.finishRound(player.id, card);
       return { ok: true, card: cloneCard(card), roundOver: true };
@@ -371,6 +381,9 @@ export class LastManGame {
     }
 
     player.hasCalledLastCard = true;
+    if (this.cpuCatchAttemptedTargetId === playerId) {
+      this.cpuCatchAttemptedTargetId = null;
+    }
     this.emit('lastCardCalled', { playerId });
     return { ok: true };
   }
@@ -391,13 +404,18 @@ export class LastManGame {
 
     const cards = this.drawCards(target, 2);
     target.hasCalledLastCard = false;
+    if (this.cpuCatchAttemptedTargetId === targetId) {
+      this.cpuCatchAttemptedTargetId = null;
+    }
     this.emit('lastCardCaught', { catcherId, targetId, cards: cards.map(cloneCard) });
     return { ok: true, cards: cards.map(cloneCard) };
   }
 
   tryCpuCatch(catcherId, targetId) {
     const catcher = this.players.find((player) => player.id === catcherId);
-    if (!catcher?.isCPU || !cpuCatchesLastCard(catcher, this.random)) return false;
+    if (!catcher?.isCPU || this.cpuCatchAttemptedTargetId === targetId) return false;
+    this.cpuCatchAttemptedTargetId = targetId;
+    if (!cpuCatchesLastCard(catcher, this.random)) return false;
     return this.catchLastCard(catcherId, targetId).ok;
   }
 
@@ -407,6 +425,9 @@ export class LastManGame {
 
     const cards = this.drawCards(player, 2);
     player.hasCalledLastCard = false;
+    if (this.cpuCatchAttemptedTargetId === player.id) {
+      this.cpuCatchAttemptedTargetId = null;
+    }
     this.emit('missedLastCardPenalty', { playerId: player.id, cards: cards.map(cloneCard) });
   }
 
@@ -425,6 +446,9 @@ export class LastManGame {
       cards.push(card);
     }
     if (player.hand.length !== 1) player.hasCalledLastCard = false;
+    if (player.hand.length !== 1 && this.cpuCatchAttemptedTargetId === player.id) {
+      this.cpuCatchAttemptedTargetId = null;
+    }
     return cards;
   }
 
@@ -500,6 +524,7 @@ export class LastManGame {
       roundWinnerId: this.roundWinnerId,
       matchWinnerId: this.matchWinnerId,
       roundScore: this.roundScore,
+      roundStartingPlayerId: this.players[this.roundStartingPlayerIndex]?.id ?? null,
       pendingDraw: this.pendingDraw,
       drawnCardId: this.turnDrawnCardId,
       validCardIds: currentValidCards.map((card) => card.id),
@@ -532,6 +557,8 @@ export class LastManGame {
       roundWinnerId: this.roundWinnerId,
       matchWinnerId: this.matchWinnerId,
       roundScore: this.roundScore,
+      roundStartingPlayerIndex: this.roundStartingPlayerIndex,
+      cpuCatchAttemptedTargetId: this.cpuCatchAttemptedTargetId,
     };
   }
 
@@ -553,6 +580,8 @@ export class LastManGame {
     game.roundWinnerId = saved.roundWinnerId;
     game.matchWinnerId = saved.matchWinnerId;
     game.roundScore = saved.roundScore;
+    game.roundStartingPlayerIndex = saved.roundStartingPlayerIndex ?? 0;
+    game.cpuCatchAttemptedTargetId = saved.cpuCatchAttemptedTargetId ?? null;
     return game;
   }
 }

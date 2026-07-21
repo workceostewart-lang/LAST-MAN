@@ -197,6 +197,26 @@ test('last-card calls and catches update the penalty state', () => {
   assert.equal(game.players[0].hand.length, 3);
 });
 
+test('CPU opponents get only one catch attempt per uncalled last card', () => {
+  const game = createScenario({ playerCount: 3 });
+  game.currentPlayerIndex = 1;
+  game.players[0].hand = [card('blue', '1')];
+  game.players[1].hand = [card('red', '2'), card('green', '4')];
+  game.players[2].hand = [card('yellow', '5'), card('blue', '6')];
+
+  let catchRolls = 0;
+  game.random = {
+    chance() {
+      catchRolls += 1;
+      return false;
+    },
+  };
+
+  assert.equal(game.tryCpuCatch('cpu1', 'player1'), false);
+  assert.equal(game.tryCpuCatch('cpu2', 'player1'), false);
+  assert.equal(catchRolls, 1);
+});
+
 test('an uncalled player draws two before their next turn', () => {
   const game = createScenario();
   game.currentPlayerIndex = 1;
@@ -263,6 +283,24 @@ test('match and score-target modes continue rounds until their win condition', (
   target.players[1].hand = [card('black', 'Wild')];
   target.playCard('player1', winning.id);
   assert.equal(target.phase, 'matchOver');
+});
+
+test('round starts rotate by seat instead of rewarding the previous winner', () => {
+  const game = new LastManGame(
+    { playerCount: 4, gameMode: 'matchMode', seed: 'rotating-starts' },
+    { autoStart: false },
+  );
+
+  game.startRound(2);
+  assert.equal(game.getState().roundStartingPlayerId, 'cpu2');
+
+  game.phase = 'roundOver';
+  assert.equal(game.continueRound().ok, true);
+  assert.equal(game.getState().roundStartingPlayerId, 'cpu3');
+
+  game.phase = 'roundOver';
+  assert.equal(game.continueRound().ok, true);
+  assert.equal(game.getState().roundStartingPlayerId, 'player1');
 });
 
 test('CPU levels follow their intended baseline strategy', () => {

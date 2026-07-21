@@ -1,7 +1,8 @@
 import { COLORS, cardPoints, isDrawCard, isWild } from './deck.js';
 
-const CALL_CHANCE = Object.freeze({ easy: 0.68, medium: 0.9, hard: 1 });
-const CATCH_CHANCE = Object.freeze({ easy: 0.3, medium: 0.65, hard: 0.92 });
+const CALL_CHANCE = Object.freeze({ easy: 0.62, medium: 0.8, hard: 0.94 });
+const CATCH_CHANCE = Object.freeze({ easy: 0.18, medium: 0.38, hard: 0.68 });
+const MEDIUM_BEST_PLAY_CHANCE = 0.68;
 
 function colorCounts(hand) {
   return Object.fromEntries(
@@ -71,11 +72,15 @@ export function chooseCpuAction(game, playerId) {
   } else if (difficulty === 'medium') {
     const nonDrawFour = validCards.filter((candidate) => candidate.value !== 'Wild Draw 4');
     const pool = nonDrawFour.length ? nonDrawFour : validCards;
-    card = [...pool].sort((left, right) => {
+    const ranked = [...pool].sort((left, right) => {
       const rightAction = actionWeight(right, player.personality, nextPlayerIsThreat(game, playerId));
       const leftAction = actionWeight(left, player.personality, nextPlayerIsThreat(game, playerId));
       return rightAction - leftAction;
-    })[0];
+    });
+    const variedPool = ranked.slice(0, Math.min(3, ranked.length));
+    card = ranked.length === 1 || game.random.chance(MEDIUM_BEST_PLAY_CHANCE)
+      ? ranked[0]
+      : game.random.pick(variedPool);
   } else {
     card = [...validCards].sort(
       (left, right) => scoreHardCard(game, player, right) - scoreHardCard(game, player, left),
