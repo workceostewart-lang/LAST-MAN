@@ -4,8 +4,8 @@
   "compatibility_date": "2026-07-21",
   "routes": [
     {
-      "pattern": "last-man.fantomzone.app/*",
-      "zone_name": "fantomzone.app"
+      "pattern": "last-man.fantomzone.app",
+      "custom_domain": true
     }
   ],
   "assets": {
