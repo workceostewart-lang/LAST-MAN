@@ -5,6 +5,7 @@ import { GameStorage } from './engine/storage.js';
 import { InteractionManager } from './interaction.js';
 import { PhysicsWorld } from './physics.js';
 import { UIManager } from './ui.js';
+import { LobbyAPI } from './api.js';
 
 const container = document.getElementById('canvas-container');
 const scene = new THREE.Scene();
@@ -16,8 +17,8 @@ function isMobileViewport() {
 
 function getTableLayout() {
   return isMobileViewport()
-    ? { drawX: -1.35, discardX: 0.85, pileScale: 0.68 }
-    : { drawX: -3, discardX: 0, pileScale: 1 };
+    ? { drawX: -1.0, discardX: 1.0, pileScale: 0.75 }
+    : { drawX: -0.85, discardX: 0.85, pileScale: 1 };
 }
 
 function updateCameraLayout() {
@@ -58,10 +59,17 @@ scene.add(plane);
 
 const physics = new PhysicsWorld();
 const savedSettings = GameStorage.loadSettings();
+
+let isGameRestored = false;
 let game;
 try {
   const savedGame = GameStorage.loadGame();
-  game = savedGame ? LastManGame.restore(savedGame) : new LastManGame();
+  if (savedGame) {
+    game = LastManGame.restore(savedGame);
+    isGameRestored = true;
+  } else {
+    game = new LastManGame();
+  }
 } catch {
   GameStorage.clearGame();
   game = new LastManGame();
@@ -74,6 +82,49 @@ let cardViews = new Map();
 let handViews = [];
 let discardViews = [];
 let drawViews = [];
+let lobbyPollTimer = null;
+let lobbyGameStarted = false;
+
+function stopLobbyPolling() {
+  window.clearInterval(lobbyPollTimer);
+  lobbyPollTimer = null;
+}
+
+function applyLobbyUpdate(lobby) {
+  if (!lobby) return;
+  const lobbyCode = lobby.lobbyCode ?? lobby.code;
+  const session = LobbyAPI.getSession(lobbyCode);
+  const isHost = session?.playerId === lobby.hostPlayerId;
+  window.currentLobbyCode = lobbyCode;
+  uiManager.showLobby(lobby, isHost, session?.playerId);
+
+  if (lobby.status === 'in-game' && !lobbyGameStarted) {
+    lobbyGameStarted = true;
+    stopLobbyPolling();
+    uiManager.hideLobby();
+    game.startMatch({
+      ...uiManager.getGameConfig(),
+      ...lobby.gameSettings,
+      playerCount: lobby.maxPlayers,
+    });
+  }
+}
+
+function startLobbyPolling() {
+  stopLobbyPolling();
+  lobbyPollTimer = window.setInterval(async () => {
+    if (!window.currentLobbyCode) return;
+    const result = await LobbyAPI.getLobby(window.currentLobbyCode);
+    if (result.ok) applyLobbyUpdate(result.lobby);
+    else if (result.status === 404) {
+      stopLobbyPolling();
+      uiManager.showMessage('This lobby has expired or was closed.');
+      uiManager.lobbyScreen.classList.add('hidden');
+      uiManager.multiplayerMenu.classList.remove('hidden');
+      window.currentLobbyCode = null;
+    }
+  }, 2000);
+}
 
 function drawForHuman() {
   const result = game.drawCard('player1');
@@ -121,9 +172,67 @@ const uiManager = new UIManager(
       game.startMatch(config);
     },
     onSettingsChanged: (settings) => GameStorage.saveSettings(settings),
+    onPlayCPU: () => {
+      game.startMatch(uiManager.getGameConfig());
+    },
+    onCreateLobby: async () => {
+      uiManager.showMessage('Creating lobby...', 10000);
+      const config = uiManager.getGameConfig();
+      const res = await LobbyAPI.createLobby({
+        playerName: 'Host',
+        maxPlayers: config.playerCount,
+        gameSettings: {
+          ...config,
+          ...GameStorage.loadSettings(),
+        },
+      });
+      uiManager.messageEl.classList.add('hidden');
+      if (res.ok) {
+        lobbyGameStarted = false;
+        applyLobbyUpdate(res.lobby);
+        startLobbyPolling();
+      } else {
+        uiManager.showMessage(res.error || 'Failed to create lobby.');
+        uiManager.multiplayerMenu.classList.remove('hidden');
+      }
+    },
+    onJoinLobby: async (code) => {
+      uiManager.showMessage('Joining lobby...', 10000);
+      const res = await LobbyAPI.joinLobby(code);
+      uiManager.messageEl.classList.add('hidden');
+      if (res.ok) {
+        lobbyGameStarted = false;
+        applyLobbyUpdate(res.lobby);
+        startLobbyPolling();
+      } else {
+        uiManager.showMessage(res.error || 'Failed to join');
+        uiManager.multiplayerMenu.classList.remove('hidden');
+      }
+    },
+    onLobbyReady: async (isReady) => {
+      const res = await LobbyAPI.setReady(window.currentLobbyCode, isReady);
+      if (res.ok) applyLobbyUpdate(res.lobby);
+      else uiManager.showMessage(res.error || 'Unable to update readiness.');
+    },
+    onStartLobbyGame: async () => {
+      const res = await LobbyAPI.startGame(window.currentLobbyCode);
+      if (res.ok) applyLobbyUpdate(res.lobby);
+      else uiManager.showMessage(res.error || 'Unable to start the game.');
+    },
+    onLeaveLobby: async () => {
+      const lobbyCode = window.currentLobbyCode;
+      stopLobbyPolling();
+      window.currentLobbyCode = null;
+      if (lobbyCode) await LobbyAPI.leaveLobby(lobbyCode);
+    }
   },
   savedSettings,
 );
+
+if (isGameRestored) {
+  uiManager.setHudVisible(true);
+  uiManager.startScreen.classList.add('hidden');
+}
 
 function createCardView(cardData, isCPU = false) {
   const view = new Card(

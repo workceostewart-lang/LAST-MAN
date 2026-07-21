@@ -22,9 +22,26 @@ export class UIManager {
     this.themeSelector = document.getElementById('theme-selector');
     this.soundToggle = document.getElementById('sound-toggle');
 
+    // New screens
+    this.startScreen = document.getElementById('start-screen');
+    this.multiplayerMenu = document.getElementById('multiplayer-menu');
+    this.lobbyScreen = document.getElementById('lobby-screen');
+    this.currentLobbyState = null;
+    this.currentLobbyPlayerId = null;
+
     this.themeSelector.value = settings.theme ?? 'premium';
     this.soundToggle.checked = settings.sound !== false;
     this.setupEvents();
+
+    // Default visibility for HUD
+    this.hudElements = [this.turnIndicator, this.drawInfo, this.settingsBtn, this.playerStatusEl];
+    this.setHudVisible(false);
+  }
+
+  setHudVisible(visible) {
+    this.hudElements.forEach(el => {
+      if (el) el.classList.toggle('hidden', !visible);
+    });
   }
 
   setupEvents() {
@@ -56,6 +73,119 @@ export class UIManager {
       this.endScreen.classList.add('hidden');
       this.callbacks.onNewGame?.(this.getGameConfig());
     });
+
+    // Start Screen & Multiplayer
+    document.getElementById('btn-play-cpu').addEventListener('click', () => {
+      this.startScreen.classList.add('hidden');
+      this.setHudVisible(true);
+      this.callbacks.onPlayCPU?.();
+    });
+
+    document.getElementById('btn-multiplayer').addEventListener('click', () => {
+      this.startScreen.classList.add('hidden');
+      this.multiplayerMenu.classList.remove('hidden');
+    });
+
+    document.getElementById('btn-back-multiplayer').addEventListener('click', () => {
+      this.multiplayerMenu.classList.add('hidden');
+      this.startScreen.classList.remove('hidden');
+    });
+
+    document.getElementById('btn-create-game').addEventListener('click', () => {
+      this.multiplayerMenu.classList.add('hidden');
+      this.callbacks.onCreateLobby?.();
+    });
+
+    document.getElementById('btn-join-game').addEventListener('click', () => {
+      const code = document.getElementById('join-code-input').value;
+      if (code.trim()) {
+        this.multiplayerMenu.classList.add('hidden');
+        this.callbacks.onJoinLobby?.(code.trim().toUpperCase());
+      }
+    });
+
+    document.getElementById('btn-copy-code').addEventListener('click', () => {
+      const code = document.getElementById('lobby-code-display').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('btn-copy-code');
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = 'Copy to Clipboard', 2000);
+      });
+    });
+
+    document.getElementById('btn-lobby-ready').addEventListener('click', () => {
+      const player = this.currentLobbyState?.players.find(
+        (candidate) => candidate.id === this.currentLobbyPlayerId,
+      );
+      this.callbacks.onLobbyReady?.(!player?.isReady);
+    });
+
+    document.getElementById('btn-start-lobby-game').addEventListener('click', () => {
+      this.callbacks.onStartLobbyGame?.();
+    });
+
+    document.getElementById('btn-leave-lobby').addEventListener('click', () => {
+      this.lobbyScreen.classList.add('hidden');
+      this.multiplayerMenu.classList.remove('hidden');
+      this.callbacks.onLeaveLobby?.();
+    });
+  }
+
+  showLobby(lobbyState, isHost, currentPlayerId = null) {
+    this.currentLobbyState = lobbyState;
+    this.currentLobbyPlayerId = currentPlayerId;
+    this.lobbyScreen.classList.remove('hidden');
+    const lobbyCode = lobbyState.lobbyCode ?? lobbyState.code;
+    document.getElementById('lobby-code-display').textContent = lobbyCode;
+
+    // Generate QR using an external API
+    const qrImg = document.getElementById('qr-code-img');
+    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(lobbyCode)}`;
+    qrImg.style.display = 'block';
+
+    const playersList = document.getElementById('lobby-players-list');
+    playersList.innerHTML = '';
+
+    lobbyState.players.forEach(p => {
+      const div = document.createElement('div');
+      div.style.display = 'flex';
+      div.style.justifyContent = 'space-between';
+      div.style.padding = '8px 12px';
+      div.style.background = 'rgba(255,255,255,0.05)';
+      div.style.borderRadius = '6px';
+
+      const name = document.createElement('span');
+      name.textContent = p.name;
+
+      const status = document.createElement('span');
+      status.textContent = p.isReady ? 'Ready' : (p.isHost ? 'Host • Waiting' : 'Waiting');
+      status.style.color = p.isReady ? '#34c759' : '#ff9500';
+
+      div.appendChild(name);
+      div.appendChild(status);
+      playersList.appendChild(div);
+    });
+
+    const startBtn = document.getElementById('btn-start-lobby-game');
+    const readyBtn = document.getElementById('btn-lobby-ready');
+    const currentPlayer = lobbyState.players.find((player) => player.id === currentPlayerId);
+
+    readyBtn.classList.remove('hidden');
+    readyBtn.disabled = lobbyState.status === 'in-game';
+    readyBtn.textContent = currentPlayer?.isReady ? 'Not Ready' : 'Ready';
+
+    if (isHost) {
+      startBtn.classList.remove('hidden');
+      startBtn.disabled = lobbyState.status !== 'ready';
+      startBtn.style.opacity = lobbyState.status === 'ready' ? '1' : '0.5';
+    } else {
+      startBtn.classList.add('hidden');
+    }
+  }
+
+  hideLobby() {
+    this.lobbyScreen.classList.add('hidden');
+    this.setHudVisible(true);
   }
 
   saveSettings() {

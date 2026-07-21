@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:worker": "npm run build && wrangler dev",
     "build": "vite build",
     "deploy": "wrangler deploy",
     "test": "node --test",

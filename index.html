@@ -63,6 +63,53 @@
         </div>
       </div>
 
+      <!-- Start Screen Modal -->
+      <div id="start-screen" class="modal">
+        <div class="modal-content text-center">
+          <h1 style="font-size: 3rem; margin-bottom: 2rem;">LAST MAN</h1>
+          <button id="btn-play-cpu" class="primary-btn mt-2">Play vs CPU</button>
+          <button id="btn-multiplayer" class="primary-btn mt-2" style="background: linear-gradient(135deg, #8a2be2, #4b0082);">Multiplayer</button>
+        </div>
+      </div>
+
+      <!-- Multiplayer Menu -->
+      <div id="multiplayer-menu" class="modal hidden">
+        <div class="modal-content text-center">
+          <h2>Multiplayer</h2>
+          <button id="btn-create-game" class="primary-btn mt-2">Create Game</button>
+          <div style="margin: 24px 0; border-bottom: 1px solid var(--glass-border);"></div>
+          <input type="text" id="join-code-input" placeholder="Enter Lobby Code" style="width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.5); color: white; text-align: center; font-size: 1.2rem; text-transform: uppercase;">
+          <button id="btn-join-game" class="primary-btn">Join Game</button>
+          <button id="btn-back-multiplayer" class="primary-btn mt-2" style="background: transparent; border: 1px solid var(--glass-border);">Back</button>
+        </div>
+      </div>
+
+      <!-- Lobby Screen -->
+      <div id="lobby-screen" class="modal hidden">
+        <div class="modal-content text-center">
+          <h2>Game Lobby</h2>
+          <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; margin-bottom: 24px;">
+            <div style="font-size: 0.9rem; color: #aaa;">Lobby Code</div>
+            <div id="lobby-code-display" style="font-size: 2.5rem; letter-spacing: 4px; font-weight: 900; margin: 8px 0;">------</div>
+            <button id="btn-copy-code" class="primary-btn" style="padding: 8px 16px; font-size: 0.9rem;">Copy to Clipboard</button>
+            <div id="qr-container" style="margin-top: 16px;">
+              <img id="qr-code-img" src="" alt="QR Code" style="display: none; margin: 0 auto; border-radius: 8px; width: 150px; height: 150px;" />
+            </div>
+          </div>
+
+          <div style="text-align: left; margin-bottom: 24px;">
+            <h3>Players</h3>
+            <div id="lobby-players-list" style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+
+          <button id="btn-lobby-ready" class="primary-btn">Ready</button>
+          <button id="btn-start-lobby-game" class="primary-btn mt-2 hidden" style="background: linear-gradient(135deg, #34c759, #28a745);">Start Game</button>
+          <button id="btn-leave-lobby" class="primary-btn mt-2" style="background: transparent; border: 1px solid var(--glass-border);">Leave Lobby</button>
+        </div>
+      </div>
+
       <!-- Settings Modal -->
       <div id="settings-modal" class="modal hidden">
         <div class="modal-content">
