@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>LAST MAN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <!-- 3D Canvas Container -->
+    <div id="canvas-container"></div>
+
+    <!-- UI Overlay -->
+    <div id="ui-layer">
+      <!-- Turn Indicator -->
+      <div id="turn-indicator" class="hud-element top-center">
+        <div class="turn-text">Your Turn</div>
+        <div class="direction-arrow">↻</div>
+      </div>
+
+      <!-- Draw Pile Info (Placeholder visual, real pile is 3D) -->
+      <div id="draw-info" class="hud-element top-left">
+        Cards left: <span id="draw-count">0</span>
+      </div>
+
+      <!-- Theme Selector -->
+      <div id="settings-btn" class="hud-element top-right">
+        ⚙️ Settings
+      </div>
+
+      <!-- Last Card Badge -->
+      <button id="last-card-btn" class="hud-element hidden pulsing">
+        LAST MAN!
+      </button>
+
+      <!-- Color Picker Modal -->
+      <div id="color-picker" class="modal hidden">
+        <div class="modal-content">
+          <h2>Choose Next Color</h2>
+          <div class="color-options">
+            <button class="color-btn" data-color="red" style="background: var(--color-red)"></button>
+            <button class="color-btn" data-color="blue" style="background: var(--color-blue)"></button>
+            <button class="color-btn" data-color="green" style="background: var(--color-green)"></button>
+            <button class="color-btn" data-color="yellow" style="background: var(--color-yellow)"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- End Screen Modal -->
+      <div id="end-screen" class="modal hidden">
+        <div class="modal-content text-center">
+          <h1 id="winner-text">You Win!</h1>
+          <p id="score-text">Score: 500</p>
+          <button id="restart-btn" class="primary-btn">Play Again</button>
+        </div>
+      </div>
+
+      <!-- Settings Modal -->
+      <div id="settings-modal" class="modal hidden">
+        <div class="modal-content">
+          <h2>Settings</h2>
+          
+          <div class="setting-row">
+            <label>Theme</label>
+            <select id="theme-selector">
+              <option value="premium">Premium/Modern</option>
+              <option value="cartoon">Cartoon</option>
+              <option value="neon">Neon/Cyberpunk</option>
+              <option value="retro">Retro Arcade</option>
+            </select>
+          </div>
+
+          <div class="setting-row">
+            <label>Sound</label>
+            <input type="checkbox" id="sound-toggle" checked />
+          </div>
+
+          <button id="close-settings-btn" class="primary-btn mt-2">Close</button>
+        </div>
+      </div>
+
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

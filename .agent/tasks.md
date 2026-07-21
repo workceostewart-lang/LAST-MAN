@@ -1,0 +1,13 @@
+- [x] Setup `.agent` folder
+- [x] Initialize Git repository and add remote
+- [ ] Setup Vite vanilla project
+- [ ] Install dependencies (three, cannon-es, gsap)
+- [ ] Generate default "Premium" theme card assets
+- [ ] Implement HTML/CSS UI Overlays (Themes, Turn Indicator, etc.)
+- [ ] Implement 3D Scene setup
+- [ ] Implement Physics engine integration
+- [ ] Implement mocked Game State
+- [ ] Implement 3D Card logic and animations
+- [ ] Implement Interaction logic (raycaster)
+- [ ] Setup GitHub Pages action
+- [ ] Commit and push to GitHub
