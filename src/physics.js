@@ -18,6 +18,7 @@ export class PhysicsWorld {
   }
   
   addCard(mesh) {
+    if (this.bodies.some((entry) => entry.mesh === mesh)) return null;
     // Create a physics body matching the card geometry
     // Card size: 1.5, 2.1, 0.02
     const shape = new CANNON.Box(new CANNON.Vec3(1.5 / 2, 2.1 / 2, 0.02 / 2));
@@ -35,6 +36,18 @@ export class PhysicsWorld {
     this.world.addBody(body);
     this.bodies.push({ mesh, body });
     return body;
+  }
+
+  removeCard(mesh) {
+    const index = this.bodies.findIndex((entry) => entry.mesh === mesh);
+    if (index < 0) return;
+    this.world.removeBody(this.bodies[index].body);
+    this.bodies.splice(index, 1);
+  }
+
+  clearCards() {
+    for (const { body } of this.bodies) this.world.removeBody(body);
+    this.bodies = [];
   }
   
   update(dt) {

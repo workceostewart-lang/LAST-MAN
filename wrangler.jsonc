@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "last-man",
+  "compatibility_date": "2026-07-21",
+  "routes": [
+    {
+      "pattern": "last-man.fantomzone.app/*",
+      "zone_name": "fantomzone.app"
+    }
+  ],
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+}

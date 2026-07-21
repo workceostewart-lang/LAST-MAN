@@ -24,6 +24,8 @@
         Cards left: <span id="draw-count">0</span>
       </div>
 
+      <div id="game-message" class="hud-element message-center hidden" role="status" aria-live="polite"></div>
+
       <!-- Theme Selector -->
       <div id="settings-btn" class="hud-element top-right">
         ⚙️ Settings
@@ -33,6 +35,8 @@
       <button id="last-card-btn" class="hud-element hidden pulsing">
         LAST MAN!
       </button>
+
+      <button id="pass-btn" class="hud-element bottom-center hidden">Pass</button>
 
       <!-- Color Picker Modal -->
       <div id="color-picker" class="modal hidden">
@@ -75,6 +79,49 @@
             <label>Sound</label>
             <input type="checkbox" id="sound-toggle" checked />
           </div>
+
+          <div class="setting-row">
+            <label for="player-count">Players</label>
+            <select id="player-count">
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4" selected>4</option>
+            </select>
+          </div>
+
+          <div class="setting-row">
+            <label for="cpu-difficulty">CPU</label>
+            <select id="cpu-difficulty">
+              <option value="easy">Easy</option>
+              <option value="medium" selected>Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+
+          <div class="setting-row">
+            <label for="cpu-personality">Personality</label>
+            <select id="cpu-personality">
+              <option value="balanced" selected>Balanced</option>
+              <option value="aggressive">Aggressive</option>
+              <option value="defensive">Defensive</option>
+            </select>
+          </div>
+
+          <div class="setting-row">
+            <label for="game-mode">Mode</label>
+            <select id="game-mode">
+              <option value="quickPlay" selected>Quick Play</option>
+              <option value="matchMode">Best of 3</option>
+              <option value="scoreTarget">First to 500</option>
+            </select>
+          </div>
+
+          <div class="setting-row">
+            <label for="stacking-toggle">Stack draws</label>
+            <input type="checkbox" id="stacking-toggle" />
+          </div>
+
+          <button id="new-game-btn" class="primary-btn mt-2">Start New Game</button>
 
           <button id="close-settings-btn" class="primary-btn mt-2">Close</button>
         </div>

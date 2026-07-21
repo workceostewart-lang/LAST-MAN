@@ -76,6 +76,10 @@ body {
   left: 24px;
 }
 
+#draw-info {
+  cursor: pointer;
+}
+
 .top-right {
   top: 24px;
   right: 24px;
@@ -85,6 +89,25 @@ body {
 .top-right:hover {
   background: rgba(255, 255, 255, 0.2);
   transform: scale(1.05);
+}
+
+.bottom-center {
+  bottom: 190px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 0;
+  color: white;
+  cursor: pointer;
+}
+
+.message-center {
+  top: 86px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: min(80vw, 560px);
+  padding: 8px 16px;
+  text-align: center;
+  text-transform: none;
 }
 
 #last-card-btn {
@@ -193,6 +216,11 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
+}
+
+#settings-modal .modal-content {
+  max-height: min(90vh, 720px);
+  overflow-y: auto;
 }
 
 select {

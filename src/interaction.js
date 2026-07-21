@@ -2,10 +2,11 @@ import * as THREE from 'three';
 import gsap from 'gsap';
 
 export class InteractionManager {
-  constructor(camera, scene, onCardPlayed) {
+  constructor(camera, scene, { onCardPlayed, onDrawPile }) {
     this.camera = camera;
     this.scene = scene;
     this.onCardPlayed = onCardPlayed;
+    this.onDrawPile = onDrawPile;
     
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2();
@@ -65,17 +66,28 @@ export class InteractionManager {
   }
   
   onClick(event) {
+    if (event.target instanceof Element && event.target.closest('#ui-layer')) {
+      return;
+    }
+
     if (event.type === 'touchend' && event.changedTouches.length > 0) {
       this.updateMousePos(event.changedTouches[0].clientX, event.changedTouches[0].clientY);
+    } else if (Number.isFinite(event.clientX) && Number.isFinite(event.clientY)) {
+      this.updateMousePos(event.clientX, event.clientY);
     }
     
     const card = this.getIntersectedCard();
     
-    if (card && !card.isCPU) {
+    if (card?.zone === 'draw') {
+      this.onDrawPile?.();
+      return;
+    }
+
+    if (card?.zone === 'hand' && !card.isCPU) {
       if (this.selectedCard === card) {
         // Double tap -> Play card
-        this.selectedCard = null;
-        this.onCardPlayed(card);
+        const played = this.onCardPlayed(card);
+        if (played) this.selectedCard = null;
       } else {
         // First tap -> Select
         if (this.selectedCard) {
@@ -84,7 +96,7 @@ export class InteractionManager {
         this.selectedCard = card;
         
         // Pop up slightly higher when selected
-        gsap.to(card.mesh.position, { y: -2.5, z: 4, duration: 0.2 });
+        gsap.to(card.mesh.position, { y: -1.4, z: 3.7, duration: 0.2 });
       }
     } else {
       // Clicked outside, deselect
@@ -93,5 +105,11 @@ export class InteractionManager {
         this.selectedCard = null;
       }
     }
+  }
+
+  clearSelection() {
+    if (this.selectedCard) this.selectedCard.hover(false);
+    this.selectedCard = null;
+    this.hoveredCard = null;
   }
 }

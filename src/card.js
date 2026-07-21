@@ -13,6 +13,7 @@ export class Card {
     this.scene = scene;
     this.physicsWorld = physicsWorld;
     this.isCPU = isCPU;
+    this.zone = isCPU ? 'cpu' : 'hand';
     
     // Create Mesh
     const geometry = new THREE.BoxGeometry(1.5, 2.1, 0.02);
@@ -45,6 +46,11 @@ export class Card {
     this.mesh.userData = { card: this };
     
     scene.add(this.mesh);
+  }
+
+  setZone(zone) {
+    this.zone = zone;
+    return this;
   }
   
   generateFaceTexture(colorStr, value) {
@@ -118,7 +124,7 @@ export class Card {
     const startX = -((total - 1) * spacing) / 2;
     let targetX = startX + (index * spacing);
     
-    let targetY = -4;
+    let targetY = -2.2;
     let targetZ = 3;
     let rotX = -0.2;
     let rotY = 0;
@@ -160,7 +166,7 @@ export class Card {
   hover(isHovered) {
     if (this.isCPU) return;
     gsap.to(this.mesh.position, {
-      y: isHovered ? -3 : -4 - Math.abs(this.mesh.rotation.z)*1.5,
+      y: isHovered ? -1.55 : -2.2 - Math.abs(this.mesh.rotation.z) * 1.5,
       z: isHovered ? 3.5 : 3,
       duration: 0.2
     });
@@ -186,5 +192,9 @@ export class Card {
       duration: 0.5,
       ease: 'power2.inOut'
     });
+  }
+
+  remove() {
+    this.scene.remove(this.mesh);
   }
 }
