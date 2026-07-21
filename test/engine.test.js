@@ -101,6 +101,7 @@ test('wild play waits for a valid color choice before committing', () => {
   assert.equal(game.chooseColor('player1', 'purple').ok, false);
   assert.equal(game.chooseColor('player1', 'blue').ok, true);
   assert.equal(game.activeColor, 'blue');
+  assert.equal(game.getState().activeColor, 'blue');
   assert.equal(game.topDiscard().id, wild.id);
   assert.equal(game.players[0].hand.length, 1);
 });

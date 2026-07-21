@@ -46,7 +46,9 @@ export class Card {
     
     // Front Texture
     let frontTex;
-    if (color === 'red' && value === '7') {
+    if (color === 'back') {
+      frontTex = backTexture;
+    } else if (color === 'red' && value === '7') {
       frontTex = red7Texture;
     } else {
       frontTex = this.generateFaceTexture(color, value);
@@ -75,7 +77,17 @@ export class Card {
   }
 
   setZone(zone) {
+    if (this.zone !== zone) {
+      gsap.killTweensOf(this.mesh.position);
+      gsap.killTweensOf(this.mesh.rotation);
+      gsap.killTweensOf(this.mesh.scale);
+    }
     this.zone = zone;
+    if (zone !== 'hand') {
+      this.handBaseY = null;
+      this.handBaseZ = null;
+      this.isMobileLayout = false;
+    }
     return this;
   }
   
@@ -143,9 +155,21 @@ export class Card {
   setRotation(x, y, z) {
     this.mesh.rotation.set(x, y, z);
   }
+
+  pinToTable(zone, position, scale, rotationZ = 0) {
+    this.setZone(zone);
+    gsap.killTweensOf(this.mesh.position);
+    gsap.killTweensOf(this.mesh.rotation);
+    gsap.killTweensOf(this.mesh.scale);
+    this.mesh.position.copy(position);
+    this.mesh.rotation.set(-Math.PI / 2, 0, rotationZ);
+    this.mesh.scale.setScalar(scale);
+    return this;
+  }
   
   // Animate to player hand
   animateToHand(index, total, isCPU) {
+    if (this.zone !== 'hand') return;
     const layout = getHandLayout(total);
     const { spacing } = layout;
     const startX = -((total - 1) * spacing) / 2;
@@ -203,7 +227,7 @@ export class Card {
   
   // Highlight when hovering
   hover(isHovered) {
-    if (this.isCPU) return;
+    if (this.isCPU || this.zone !== 'hand') return;
     const baseY = this.handBaseY ?? -2.2 - Math.abs(this.mesh.rotation.z) * 1.5;
     const baseZ = this.handBaseZ ?? 3;
     gsap.to(this.mesh.position, {
@@ -215,6 +239,7 @@ export class Card {
   
   // Play card to discard pile
   playToDiscard(discardTopPos, pileIndex = 0) {
+    this.setZone('discard');
     // Generate a pseudo-random but clean offset based on pile height for the "pile feel"
     // Using pileIndex ensures it lands perfectly consistently for its position in the pile
     const rotZ = (pileIndex % 3 - 1) * 0.05;
@@ -226,7 +251,8 @@ export class Card {
       y: discardTopPos.y,
       z: discardTopPos.z + offsetZ,
       duration: 0.5,
-      ease: 'power2.inOut'
+      ease: 'power2.inOut',
+      overwrite: 'auto',
     });
     
     gsap.to(this.mesh.rotation, {
@@ -234,7 +260,8 @@ export class Card {
       y: 0,
       z: rotZ,
       duration: 0.5,
-      ease: 'power2.inOut'
+      ease: 'power2.inOut',
+      overwrite: 'auto',
     });
   }
 

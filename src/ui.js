@@ -10,6 +10,9 @@ export class UIManager {
     this.turnIndicator = document.getElementById('turn-indicator');
     this.turnText = this.turnIndicator.querySelector('.turn-text');
     this.directionArrow = this.turnIndicator.querySelector('.direction-arrow');
+    this.activeColorIndicator = document.getElementById('active-color-indicator');
+    this.activeColorText = document.getElementById('active-color-text');
+    this.activeColorSwatch = this.activeColorIndicator.querySelector('.active-color-swatch');
     this.lastCardBtn = document.getElementById('last-card-btn');
     this.passBtn = document.getElementById('pass-btn');
     this.messageEl = document.getElementById('game-message');
@@ -260,6 +263,15 @@ export class UIManager {
     this.uiLayer.dataset.canPass = String(state.canPass);
     this.uiLayer.dataset.round = String(state.roundNumber);
     this.drawCountEl.textContent = state.drawPileCount;
+
+    const showActiveColor = state.phase !== 'ready' && Boolean(state.activeColor);
+    this.activeColorIndicator.classList.toggle('hidden', !showActiveColor);
+    if (showActiveColor) {
+      const colorName = state.activeColor.toUpperCase();
+      this.activeColorText.textContent = colorName;
+      this.activeColorSwatch.style.backgroundColor = `var(--color-${state.activeColor})`;
+      this.activeColorIndicator.setAttribute('aria-label', `Current color: ${colorName}`);
+    }
 
     if (this.playerStatusEl) {
       this.playerStatusEl.innerHTML = '';

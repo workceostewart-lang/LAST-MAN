@@ -17,8 +17,30 @@ function isMobileViewport() {
 
 function getTableLayout() {
   return isMobileViewport()
-    ? { drawX: -1.0, discardX: 1.0, pileScale: 0.75 }
-    : { drawX: -0.85, discardX: 0.85, pileScale: 1 };
+    ? { drawX: -1.05, discardX: 1.05, tableZ: -1.1, pileScale: 0.65 }
+    : { drawX: -1.15, discardX: 1.15, tableZ: -0.7, pileScale: 0.82 };
+}
+
+function getDrawPilePosition(layout, index = 0) {
+  return new THREE.Vector3(layout.drawX, index * 0.025, layout.tableZ);
+}
+
+function getDiscardPilePosition(layout, index = 0) {
+  const offsetX = (index % 4 - 1.5) * 0.02;
+  const offsetZ = (index % 5 - 2) * 0.02;
+  return new THREE.Vector3(
+    layout.discardX + offsetX,
+    0.03 + index * 0.02,
+    layout.tableZ + offsetZ,
+  );
+}
+
+function getDiscardPileBasePosition(layout, index = 0) {
+  return new THREE.Vector3(
+    layout.discardX,
+    0.03 + index * 0.02,
+    layout.tableZ,
+  );
 }
 
 function updateCameraLayout() {
@@ -253,17 +275,13 @@ function buildRound(state) {
 
   if (state.discardTop) {
     const top = createCardView(state.discardTop).setZone('discard');
-    top.setPosition(layout.discardX, 0.03, 0);
-    top.setRotation(-Math.PI / 2, 0, 0);
-    top.mesh.scale.setScalar(layout.pileScale);
+    top.pinToTable('discard', getDiscardPilePosition(layout), layout.pileScale);
     discardViews.push(top);
   }
 
   for (let index = 0; index < 5; index += 1) {
     const view = new Card(`draw-visual-${index}`, 'back', '', scene, physics).setZone('draw');
-    view.setPosition(layout.drawX, index * 0.025, 0);
-    view.setRotation(-Math.PI / 2, 0, 0);
-    view.mesh.scale.setScalar(layout.pileScale);
+    view.pinToTable('draw', getDrawPilePosition(layout, index), layout.pileScale);
     drawViews.push(view);
   }
 
@@ -312,8 +330,8 @@ function movePlayedCard(event) {
   view.setZone('discard');
   const layout = getTableLayout();
   view.mesh.scale.setScalar(layout.pileScale);
-  const topY = discardViews.length * 0.02; // Card thickness is 0.02
-  view.playToDiscard(new THREE.Vector3(layout.discardX, topY, 0), discardViews.length);
+  const target = getDiscardPileBasePosition(layout, discardViews.length);
+  view.playToDiscard(target, discardViews.length);
   discardViews.push(view);
 }
 
@@ -416,14 +434,16 @@ function reflowTable() {
   updateCameraLayout();
   const layout = getTableLayout();
   drawViews.forEach((view, index) => {
-    view.setPosition(layout.drawX, index * 0.025, 0);
-    view.mesh.scale.setScalar(layout.pileScale);
+    view.pinToTable('draw', getDrawPilePosition(layout, index), layout.pileScale);
   });
   discardViews.forEach((view, index) => {
-    const offsetX = (index % 4 - 1.5) * 0.02;
-    const offsetZ = (index % 5 - 2) * 0.02;
-    view.setPosition(layout.discardX + offsetX, index * 0.02, offsetZ);
-    view.mesh.scale.setScalar(layout.pileScale);
+    const rotationZ = (index % 3 - 1) * 0.05;
+    view.pinToTable(
+      'discard',
+      getDiscardPilePosition(layout, index),
+      layout.pileScale,
+      rotationZ,
+    );
   });
   handViews.forEach((view, index) => view.animateToHand(index, handViews.length, false));
 }

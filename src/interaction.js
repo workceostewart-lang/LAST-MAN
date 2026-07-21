@@ -52,7 +52,10 @@ export class InteractionManager {
   }
   
   handleHover() {
-    const card = this.getIntersectedCard();
+    const intersectedCard = this.getIntersectedCard();
+    const card = intersectedCard?.zone === 'hand' && !intersectedCard.isCPU
+      ? intersectedCard
+      : null;
     
     if (card !== this.hoveredCard) {
       if (this.hoveredCard && this.hoveredCard !== this.selectedCard) {
