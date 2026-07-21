@@ -208,6 +208,37 @@ body {
   box-shadow: 0 8px 20px rgba(0, 122, 255, 0.4);
 }
 
+.primary-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  transform: none;
+  box-shadow: none;
+}
+
+.start-mode-picker {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 8px;
+  text-align: left;
+}
+
+.start-mode-picker label {
+  font-size: 0.85rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.start-mode-picker select {
+  width: 100%;
+  font-size: 1rem;
+}
+
+.start-mode-picker p {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.75rem;
+}
+
 .text-center { text-align: center; }
 .mt-2 { margin-top: 24px; }
 

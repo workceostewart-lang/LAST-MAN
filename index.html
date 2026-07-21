@@ -67,8 +67,18 @@
       <div id="start-screen" class="modal">
         <div class="modal-content text-center">
           <h1 style="font-size: 3rem; margin-bottom: 2rem;">LAST MAN</h1>
-          <button id="btn-play-cpu" class="primary-btn mt-2">Play vs CPU</button>
-          <button id="btn-multiplayer" class="primary-btn mt-2" style="background: linear-gradient(135deg, #8a2be2, #4b0082);">Multiplayer</button>
+          <div class="start-mode-picker">
+            <label for="start-game-mode">Choose Game Mode</label>
+            <select id="start-game-mode" aria-describedby="start-mode-help">
+              <option value="" selected disabled>Select a mode</option>
+              <option value="quickPlay">Quick Play — One Round</option>
+              <option value="matchMode">Match Mode — Best of 3</option>
+              <option value="scoreTarget">Score Target — First to 500</option>
+            </select>
+            <p id="start-mode-help">Select a mode before starting.</p>
+          </div>
+          <button id="btn-play-cpu" class="primary-btn mt-2" disabled>Play vs CPU</button>
+          <button id="btn-multiplayer" class="primary-btn mt-2" style="background: linear-gradient(135deg, #8a2be2, #4b0082);" disabled>Multiplayer</button>
         </div>
       </div>
 

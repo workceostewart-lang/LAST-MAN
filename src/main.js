@@ -60,20 +60,8 @@ scene.add(plane);
 const physics = new PhysicsWorld();
 const savedSettings = GameStorage.loadSettings();
 
-let isGameRestored = false;
-let game;
-try {
-  const savedGame = GameStorage.loadGame();
-  if (savedGame) {
-    game = LastManGame.restore(savedGame);
-    isGameRestored = true;
-  } else {
-    game = new LastManGame();
-  }
-} catch {
-  GameStorage.clearGame();
-  game = new LastManGame();
-}
+GameStorage.clearGame();
+let game = new LastManGame({}, { autoStart: false });
 
 let latestState = game.getState();
 let renderedRound = -1;
@@ -164,7 +152,12 @@ const uiManager = new UIManager(
     onDrawPile: drawForHuman,
     onContinue: () => {
       if (latestState.phase === 'roundOver') game.continueRound();
-      else game.startMatch(latestState.config);
+      else {
+        GameStorage.clearGame();
+        window.clearTimeout(cpuTimer);
+        clearTable();
+        uiManager.showStartScreen();
+      }
     },
     onNewGame: (config) => {
       interaction.clearSelection();
@@ -228,11 +221,6 @@ const uiManager = new UIManager(
   },
   savedSettings,
 );
-
-if (isGameRestored) {
-  uiManager.setHudVisible(true);
-  uiManager.startScreen.classList.add('hidden');
-}
 
 function createCardView(cardData, isCPU = false) {
   const view = new Card(
@@ -371,6 +359,12 @@ function scheduleCpuTurn(state) {
 
 function onEngineEvent(event, state) {
   latestState = state;
+  if (state.phase === 'ready') {
+    clearTable();
+    uiManager.update(state, event);
+    return;
+  }
+
   if (state.roundNumber !== renderedRound || ['roundStarted', 'matchStarted'].includes(event.type)) {
     buildRound(state);
   } else {

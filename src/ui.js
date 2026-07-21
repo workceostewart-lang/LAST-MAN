@@ -24,6 +24,10 @@ export class UIManager {
 
     // New screens
     this.startScreen = document.getElementById('start-screen');
+    this.startGameMode = document.getElementById('start-game-mode');
+    this.playCpuBtn = document.getElementById('btn-play-cpu');
+    this.multiplayerBtn = document.getElementById('btn-multiplayer');
+    this.settingsGameMode = document.getElementById('game-mode');
     this.multiplayerMenu = document.getElementById('multiplayer-menu');
     this.lobbyScreen = document.getElementById('lobby-screen');
     this.currentLobbyState = null;
@@ -32,6 +36,7 @@ export class UIManager {
     this.themeSelector.value = settings.theme ?? 'premium';
     this.soundToggle.checked = settings.sound !== false;
     this.setupEvents();
+    this.updateStartActionState();
 
     // Default visibility for HUD
     this.hudElements = [this.turnIndicator, this.drawInfo, this.settingsBtn, this.playerStatusEl];
@@ -42,6 +47,23 @@ export class UIManager {
     this.hudElements.forEach(el => {
       if (el) el.classList.toggle('hidden', !visible);
     });
+  }
+
+  updateStartActionState() {
+    const hasSelectedMode = Boolean(this.startGameMode.value);
+    this.playCpuBtn.disabled = !hasSelectedMode;
+    this.multiplayerBtn.disabled = !hasSelectedMode;
+  }
+
+  showStartScreen() {
+    this.endScreen.classList.add('hidden');
+    this.settingsModal.classList.add('hidden');
+    this.multiplayerMenu.classList.add('hidden');
+    this.lobbyScreen.classList.add('hidden');
+    this.setHudVisible(false);
+    this.startGameMode.value = '';
+    this.updateStartActionState();
+    this.startScreen.classList.remove('hidden');
   }
 
   setupEvents() {
@@ -55,6 +77,14 @@ export class UIManager {
 
     this.themeSelector.addEventListener('change', () => this.saveSettings());
     this.soundToggle.addEventListener('change', () => this.saveSettings());
+    this.startGameMode.addEventListener('change', () => {
+      this.settingsGameMode.value = this.startGameMode.value;
+      this.updateStartActionState();
+    });
+    this.settingsGameMode.addEventListener('change', () => {
+      this.startGameMode.value = this.settingsGameMode.value;
+      this.updateStartActionState();
+    });
 
     document.querySelectorAll('.color-btn').forEach((button) => {
       button.addEventListener('click', () => {
@@ -75,13 +105,15 @@ export class UIManager {
     });
 
     // Start Screen & Multiplayer
-    document.getElementById('btn-play-cpu').addEventListener('click', () => {
+    this.playCpuBtn.addEventListener('click', () => {
+      if (!this.startGameMode.value) return;
       this.startScreen.classList.add('hidden');
       this.setHudVisible(true);
       this.callbacks.onPlayCPU?.();
     });
 
-    document.getElementById('btn-multiplayer').addEventListener('click', () => {
+    this.multiplayerBtn.addEventListener('click', () => {
+      if (!this.startGameMode.value) return;
       this.startScreen.classList.add('hidden');
       this.multiplayerMenu.classList.remove('hidden');
     });
@@ -196,7 +228,7 @@ export class UIManager {
   }
 
   getGameConfig() {
-    const gameMode = document.getElementById('game-mode').value;
+    const gameMode = this.settingsGameMode.value;
     return {
       playerCount: Number(document.getElementById('player-count').value),
       cpuDifficulty: document.getElementById('cpu-difficulty').value,
@@ -214,7 +246,7 @@ export class UIManager {
     document.getElementById('player-count').value = String(config.playerCount ?? 4);
     document.getElementById('cpu-difficulty').value = config.cpuDifficulty ?? 'medium';
     document.getElementById('cpu-personality').value = config.cpuPersonality ?? 'balanced';
-    document.getElementById('game-mode').value = config.gameMode ?? 'quickPlay';
+    this.settingsGameMode.value = config.gameMode ?? 'quickPlay';
     document.getElementById('stacking-toggle').checked = Boolean(config.stacking);
   }
 

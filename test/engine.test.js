@@ -31,6 +31,21 @@ function createScenario(config = {}) {
   return game;
 }
 
+test('a pre-game engine stays idle until the player explicitly starts a mode', () => {
+  const game = new LastManGame({}, { autoStart: false });
+
+  assert.equal(game.phase, 'ready');
+  assert.equal(game.roundNumber, 0);
+  assert.equal(game.drawPile.length, 0);
+  assert.equal(game.discardPile.length, 0);
+  assert.equal(game.players.every((player) => player.hand.length === 0), true);
+
+  game.startMatch({ gameMode: 'matchMode', seed: 'explicit-start' });
+  assert.equal(game.phase, 'playing');
+  assert.equal(game.config.gameMode, 'matchMode');
+  assert.equal(game.roundNumber, 1);
+});
+
 test('standard deck has the correct 108-card composition', () => {
   const deck = createStandardDeck();
   assert.equal(deck.length, 108);
