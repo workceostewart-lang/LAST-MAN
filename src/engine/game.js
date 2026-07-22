@@ -22,6 +22,7 @@ const DEFAULT_CONFIG = Object.freeze({
   matchRounds: 3,
   scoreTarget: 500,
   stacking: false,
+  playerWinRateBoost: 0.05,
   seed: undefined,
 });
 
@@ -31,6 +32,12 @@ const GAME_MODES = ['quickPlay', 'matchMode', 'scoreTarget'];
 
 function boundedInteger(value, fallback, minimum, maximum) {
   const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.max(minimum, Math.min(maximum, parsed));
+}
+
+function boundedNumber(value, fallback, minimum, maximum) {
+  const parsed = Number(value);
   if (!Number.isFinite(parsed)) return fallback;
   return Math.max(minimum, Math.min(maximum, parsed));
 }
@@ -50,6 +57,7 @@ function normalizeConfig(config = {}) {
     matchRounds,
     scoreTarget: boundedInteger(merged.scoreTarget, 500, 50, 5000),
     stacking: Boolean(merged.stacking),
+    playerWinRateBoost: boundedNumber(merged.playerWinRateBoost, 0.05, 0, 0.1),
     seed: merged.seed ?? `last-man-${Date.now()}`,
   };
 }
@@ -271,7 +279,11 @@ export class LastManGame {
     if (player.hand.length !== 1) player.hasCalledLastCard = false;
 
     if (player.hand.length === 1 && player.isCPU) {
-      player.hasCalledLastCard = cpuCallsLastCard(player, this.random);
+      player.hasCalledLastCard = cpuCallsLastCard(
+        player,
+        this.random,
+        player.id === 'player1' ? 0 : this.config.playerWinRateBoost,
+      );
     }
 
     if (player.hand.length === 1 && !player.hasCalledLastCard) {

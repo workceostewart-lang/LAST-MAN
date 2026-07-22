@@ -39,6 +39,7 @@ test('a pre-game engine stays idle until the player explicitly starts a mode', (
   assert.equal(game.drawPile.length, 0);
   assert.equal(game.discardPile.length, 0);
   assert.equal(game.players.every((player) => player.hand.length === 0), true);
+  assert.equal(game.config.playerWinRateBoost, 0.05);
 
   game.startMatch({ gameMode: 'matchMode', seed: 'explicit-start' });
   assert.equal(game.phase, 'playing');

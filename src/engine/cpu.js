@@ -3,6 +3,7 @@ import { COLORS, cardPoints, isDrawCard, isWild } from './deck.js';
 const CALL_CHANCE = Object.freeze({ easy: 0.62, medium: 0.8, hard: 0.94 });
 const CATCH_CHANCE = Object.freeze({ easy: 0.18, medium: 0.38, hard: 0.68 });
 const MEDIUM_BEST_PLAY_CHANCE = 0.68;
+const CPU_CALL_CHANCE_COST_PER_WIN_RATE_POINT = 3.6;
 
 function colorCounts(hand) {
   return Object.fromEntries(
@@ -96,11 +97,15 @@ export function chooseCpuAction(game, playerId) {
   };
 }
 
-export function cpuCallsLastCard(player, random) {
+export function cpuCallsLastCard(player, random, playerWinRateBoost = 0) {
   let chance = CALL_CHANCE[player.difficulty ?? 'medium'];
   if (player.personality === 'defensive') chance += 0.04;
   if (player.personality === 'aggressive') chance -= 0.04;
-  return random.chance(chance);
+
+  // A five-point target boost is calibrated to an 18-point CPU call penalty.
+  // This changes opponent consistency without altering deals, draws, or legal play.
+  chance -= playerWinRateBoost * CPU_CALL_CHANCE_COST_PER_WIN_RATE_POINT;
+  return random.chance(Math.max(0, Math.min(1, chance)));
 }
 
 export function cpuCatchesLastCard(player, random) {

@@ -3,12 +3,13 @@ import assert from 'node:assert/strict';
 
 import { LastManGame } from '../src/engine/game.js';
 
-function playEqualStrategyRound(seed) {
+function playAutomatedRound(seed, playerWinRateBoost = 0) {
   const game = new LastManGame({
     playerCount: 4,
     gameMode: 'quickPlay',
     cpuDifficulty: 'medium',
     cpuPersonality: 'balanced',
+    playerWinRateBoost,
     seed,
   });
 
@@ -45,7 +46,7 @@ test('equal-strategy seats have an even long-run opportunity to win', () => {
   const wins = { player1: 0, cpu1: 0, cpu2: 0, cpu3: 0 };
 
   for (let index = 0; index < rounds; index += 1) {
-    wins[playEqualStrategyRound(`seat-balance-${index}`)] += 1;
+    wins[playAutomatedRound(`seat-balance-${index}`)] += 1;
   }
 
   for (const [playerId, winCount] of Object.entries(wins)) {
@@ -55,4 +56,19 @@ test('equal-strategy seats have an even long-run opportunity to win', () => {
       `${playerId} win rate ${(winRate * 100).toFixed(1)}% is outside the balanced range`,
     );
   }
+});
+
+test('default assist raises the local player target by five percentage points', () => {
+  const rounds = 3000;
+  const wins = { player1: 0, cpu1: 0, cpu2: 0, cpu3: 0 };
+
+  for (let index = 0; index < rounds; index += 1) {
+    wins[playAutomatedRound(`player-boost-${index}`, 0.05)] += 1;
+  }
+
+  const playerWinRate = wins.player1 / rounds;
+  assert.ok(
+    playerWinRate >= 0.28 && playerWinRate <= 0.32,
+    `player win rate ${(playerWinRate * 100).toFixed(1)}% missed the 30% target`,
+  );
 });
